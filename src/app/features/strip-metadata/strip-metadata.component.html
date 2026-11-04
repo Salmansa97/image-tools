@@ -1,0 +1,201 @@
+<app-tool-page [content]="content">
+  @if (store.isEmpty()) {
+    <app-file-uploader
+      heading="Drag & drop photos to clean"
+      [rejected]="session.rejected()"
+      (filesSelected)="session.add($event)"
+    />
+  } @else {
+    <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div class="order-2 min-w-0 lg:order-1">
+        @if (withGps().length > 0) {
+          <div
+            class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-5 dark:border-rose-500/30 dark:bg-rose-500/10"
+          >
+            <div class="flex items-start gap-3">
+              <app-icon
+                name="map-pin"
+                [size]="20"
+                class="mt-0.5 shrink-0 text-rose-600 dark:text-rose-400"
+              />
+              <div>
+                <h2 class="text-base font-bold text-rose-900 dark:text-rose-200">
+                  {{ withGps().length }}
+                  {{ withGps().length === 1 ? 'photo records' : 'photos record' }} a location
+                </h2>
+                <p class="mt-1 text-sm text-rose-800 dark:text-rose-300">
+                  These files contain GPS coordinates accurate to a few metres. Stripping removes
+                  them along with everything else.
+                </p>
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (store.isProcessing()) {
+          <app-processing-progress
+            [percent]="store.overallProgress()"
+            [completed]="store.completed().length"
+            [total]="store.count()"
+            [failed]="store.failed().length"
+            title="Removing metadata…"
+            (cancelled)="session.cancel()"
+          />
+        }
+
+        <div class="mt-6 space-y-3">
+          <div class="flex items-center justify-between gap-3">
+            <h2 class="text-base font-bold">
+              {{ store.count() }} {{ store.count() === 1 ? 'image' : 'images' }}
+            </h2>
+            <button
+              type="button"
+              (click)="reset()"
+              class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+            >
+              <app-icon name="refresh" [size]="14" />
+              Start over
+            </button>
+          </div>
+
+          @for (item of store.items(); track item.id) {
+            <app-image-card [item]="item" (removed)="session.remove($event)">
+              @if (scanFor(item.id); as scan) {
+                <div class="mt-3 flex flex-wrap gap-1.5">
+                  @if (scan.hasGps) {
+                    <span
+                      class="inline-flex items-center gap-1 rounded-md bg-rose-100 px-1.5 py-0.5 text-[11px] font-bold text-rose-700 dark:bg-rose-500/15 dark:text-rose-300"
+                    >
+                      <app-icon name="map-pin" [size]="11" />
+                      GPS
+                    </span>
+                  }
+                  @if (scan.hasExif) {
+                    <span
+                      class="rounded-md bg-amber-100 px-1.5 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300"
+                    >
+                      EXIF
+                    </span>
+                  }
+                  @if (scan.hasXmp) {
+                    <span
+                      class="rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                    >
+                      XMP
+                    </span>
+                  }
+                  @if (scan.hasIcc) {
+                    <span
+                      class="rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                    >
+                      Colour profile
+                    </span>
+                  }
+                  @if (!scan.hasExif && !scan.hasXmp && !scan.hasIcc) {
+                    <span
+                      class="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                    >
+                      Already clean
+                    </span>
+                  }
+                  @if (scan.bytes > 0) {
+                    <span class="text-[11px] text-slate-400 dark:text-slate-500">
+                      {{ scan.bytes | fileSize }} of metadata
+                    </span>
+                  }
+                </div>
+              }
+            </app-image-card>
+          }
+        </div>
+
+        <div class="mt-5">
+          <app-file-uploader
+            [compact]="true"
+            heading="Add more images"
+            [rejected]="session.rejected()"
+            (filesSelected)="session.add($event)"
+          />
+        </div>
+      </div>
+
+      <aside class="order-1 lg:order-2">
+        <app-options-panel heading="Removal options">
+          @if (scanning()) {
+            <p class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <app-icon name="spinner" [size]="13" svgClass="animate-spin" />
+              Scanning for metadata…
+            </p>
+          } @else if (scans().length > 0) {
+            <dl class="space-y-2 rounded-xl bg-slate-50 p-3.5 text-xs dark:bg-slate-950/50">
+              <div class="flex justify-between gap-3">
+                <dt class="text-slate-500 dark:text-slate-400">With GPS</dt>
+                <dd class="font-semibold">{{ withGps().length }}</dd>
+              </div>
+              <div class="flex justify-between gap-3">
+                <dt class="text-slate-500 dark:text-slate-400">Carrying metadata</dt>
+                <dd class="font-semibold">{{ withAny().length }} of {{ scans().length }}</dd>
+              </div>
+              @if (totalMetadataBytes() > 0) {
+                <div class="flex justify-between gap-3">
+                  <dt class="text-slate-500 dark:text-slate-400">Will be removed</dt>
+                  <dd class="font-semibold">{{ totalMetadataBytes() | fileSize }}</dd>
+                </div>
+              }
+            </dl>
+          }
+
+          <app-output-format-field
+            [(format)]="format"
+            [(quality)]="quality"
+            [(background)]="background"
+            [sourceType]="store.items()[0]?.sourceType ?? null"
+            idPrefix="strip"
+          />
+
+          <app-alert tone="info" title="How this works">
+            Each image is decoded to raw pixels and written out as a fresh file, so there is nowhere
+            for metadata to survive. Keep quality high to preserve the picture itself.
+          </app-alert>
+
+          @if (session.errorMessage(); as message) {
+            <app-alert tone="error" title="Something went wrong">{{ message }}</app-alert>
+          }
+
+          <div class="space-y-2.5 border-t border-slate-100 pt-5 dark:border-slate-800">
+            <app-tool-action-button
+              [label]="'Clean ' + store.count() + (store.count() === 1 ? ' image' : ' images')"
+              busyLabel="Removing…"
+              icon="shield"
+              [busy]="store.isProcessing()"
+              [disabled]="store.isEmpty()"
+              (activated)="strip()"
+            />
+
+            @if (store.completed().length > 1) {
+              <app-tool-action-button
+                label="Download all as ZIP"
+                [busyLabel]="'Building ZIP… ' + session.zipPercent() + '%'"
+                icon="zip"
+                variant="secondary"
+                [busy]="session.zipping()"
+                (activated)="downloadZip()"
+              />
+            }
+          </div>
+
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            Want to see what is in a file first?
+            <a
+              routerLink="/image-metadata-viewer"
+              class="font-semibold text-brand-700 hover:underline dark:text-brand-400"
+            >
+              Open the metadata viewer
+            </a>
+            .
+          </p>
+        </app-options-panel>
+      </aside>
+    </div>
+  }
+</app-tool-page>

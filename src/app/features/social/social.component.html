@@ -1,0 +1,279 @@
+<app-tool-page [content]="content">
+  @if (item(); as current) {
+    @if (!isMeasured()) {
+      <div
+        class="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center shadow-soft dark:border-slate-800 dark:bg-slate-900"
+        aria-live="polite"
+      >
+        <app-icon
+          name="spinner"
+          [size]="26"
+          svgClass="animate-spin"
+          class="text-brand-600 dark:text-brand-400"
+        />
+        <p class="mt-3 text-sm font-medium text-slate-600 dark:text-slate-400">
+          Reading {{ current.fileName }}…
+        </p>
+      </div>
+    } @else {
+      <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div class="order-2 min-w-0 lg:order-1">
+          <div
+            class="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft sm:p-5 dark:border-slate-800 dark:bg-slate-900"
+          >
+            <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div class="min-w-0">
+                <h2 class="truncate text-base font-bold" [title]="current.fileName">
+                  {{ current.fileName }}
+                </h2>
+                <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                  {{ current.width }} × {{ current.height }} px ·
+                  {{ current.sourceSize | fileSize }}
+                </p>
+              </div>
+              <button
+                type="button"
+                (click)="reset()"
+                class="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+              >
+                <app-icon name="refresh" [size]="14" />
+                Start over
+              </button>
+            </div>
+
+            @if (outputs().length > 0) {
+              <div
+                class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-950/50"
+              >
+                <p class="text-sm font-semibold">
+                  {{ outputs().length }} images · {{ totalSize() | fileSize }} total
+                </p>
+                @if (generating()) {
+                  <span class="text-xs text-slate-500 dark:text-slate-400">{{ progress() }}%</span>
+                }
+              </div>
+
+              <ul class="grid gap-4 sm:grid-cols-2">
+                @for (output of outputs(); track output.fileName) {
+                  <li
+                    class="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700"
+                  >
+                    <div
+                      class="checkerboard flex h-40 items-center justify-center overflow-hidden border-b border-slate-200 dark:border-slate-700"
+                    >
+                      <img
+                        [src]="output.url"
+                        [alt]="output.preset.platform + ' ' + output.preset.name"
+                        loading="lazy"
+                        decoding="async"
+                        class="max-h-full max-w-full object-contain"
+                      />
+                    </div>
+                    <div class="p-3">
+                      <p class="text-xs font-bold">
+                        {{ output.preset.platform }} · {{ output.preset.name }}
+                      </p>
+                      <p class="mt-0.5 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                        {{ output.preset.width }} × {{ output.preset.height }} ·
+                        {{ output.blob.size | fileSize }}
+                      </p>
+                      <div class="mt-2.5">
+                        <app-download-button
+                          [blob]="output.blob"
+                          [fileName]="output.fileName"
+                          variant="secondary"
+                          size="sm"
+                        />
+                      </div>
+                    </div>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <div
+                class="flex h-64 flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 px-5 text-center dark:border-slate-700"
+              >
+                @if (generating()) {
+                  <app-icon
+                    name="spinner"
+                    [size]="26"
+                    svgClass="animate-spin"
+                    class="text-brand-600 dark:text-brand-400"
+                  />
+                  <p class="mt-3 text-sm font-medium text-slate-600 dark:text-slate-400">
+                    Rendering… {{ progress() }}%
+                  </p>
+                  <button
+                    type="button"
+                    (click)="cancel()"
+                    class="mt-3 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold dark:border-slate-700"
+                  >
+                    Cancel
+                  </button>
+                } @else {
+                  <span
+                    class="checkerboard flex h-28 w-40 items-center justify-center overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700"
+                  >
+                    <img
+                      [src]="current.previewUrl"
+                      [alt]="current.fileName"
+                      class="max-h-full max-w-full object-contain"
+                    />
+                  </span>
+                  <p class="mt-4 text-sm text-slate-500 dark:text-slate-400">
+                    Your social sizes will appear here.
+                  </p>
+                  <p class="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                    {{ selected().length }} sizes selected
+                  </p>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <aside class="order-1 lg:order-2">
+          <app-options-panel heading="Sizes">
+            <div class="space-y-4">
+              @for (platform of platforms; track platform) {
+                <div>
+                  <label
+                    class="mb-1.5 flex cursor-pointer items-center gap-2 text-sm font-bold text-slate-900 dark:text-white"
+                  >
+                    <input
+                      type="checkbox"
+                      class="size-4 rounded border-slate-300 accent-brand-600 dark:border-slate-600"
+                      [checked]="isPlatformSelected(platform)"
+                      (change)="togglePlatform(platform)"
+                    />
+                    {{ platform }}
+                  </label>
+
+                  <ul class="ml-6 space-y-1">
+                    @for (preset of presetsFor(platform); track preset.id) {
+                      <li>
+                        <label
+                          class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                          [title]="preset.note"
+                        >
+                          <input
+                            type="checkbox"
+                            class="size-3.5 rounded border-slate-300 accent-brand-600 dark:border-slate-600"
+                            [checked]="isSelected(preset.id)"
+                            (change)="togglePreset(preset.id)"
+                          />
+                          <span class="flex-1">{{ preset.name }}</span>
+                          <span class="font-mono tabular-nums text-slate-400 dark:text-slate-500">
+                            {{ preset.width }}×{{ preset.height }}
+                          </span>
+                        </label>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
+            </div>
+
+            <app-segmented-control
+              [(value)]="fit"
+              [options]="fitOptions"
+              label="How to fit the frame"
+              groupName="social-fit"
+            />
+
+            @if (fit() === 'contain') {
+              <div>
+                <label class="flex cursor-pointer items-start gap-2.5 text-sm font-medium">
+                  <input
+                    type="checkbox"
+                    class="mt-0.5 size-4 rounded border-slate-300 accent-brand-600 dark:border-slate-600"
+                    [checked]="transparentPadding()"
+                    (change)="transparentPadding.set($any($event.target).checked)"
+                  />
+                  <span>
+                    Transparent padding
+                    <span
+                      class="mt-0.5 block text-xs font-normal text-slate-500 dark:text-slate-400"
+                    >
+                      PNG and WebP only — JPEG always fills it.
+                    </span>
+                  </span>
+                </label>
+
+                @if (!transparentPadding()) {
+                  <div class="mt-3">
+                    <label for="social-bg" class="mb-2 block text-sm font-semibold">
+                      Padding colour
+                    </label>
+                    <div class="flex items-center gap-3">
+                      <input
+                        id="social-bg"
+                        type="color"
+                        class="size-10 cursor-pointer rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-950"
+                        [value]="background()"
+                        (input)="background.set($any($event.target).value)"
+                      />
+                      <span class="font-mono text-sm text-slate-600 dark:text-slate-400">
+                        {{ background() }}
+                      </span>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            <app-segmented-control
+              [(value)]="format"
+              [options]="formatOptions"
+              label="Output format"
+              groupName="social-format"
+            />
+
+            <app-quality-slider [(value)]="quality" inputId="social-quality" label="Quality" />
+
+            @if (upscaled().length > 0) {
+              <app-alert tone="warning" title="Some sizes need upscaling">
+                {{ upscaled().length }} selected
+                {{ upscaled().length === 1 ? 'size is' : 'sizes are' }} larger than your source
+                image, so {{ upscaled().length === 1 ? 'it' : 'they' }} will look softer.
+              </app-alert>
+            }
+
+            @if (errorMessage(); as message) {
+              <app-alert tone="error" title="Generation failed">{{ message }}</app-alert>
+            }
+
+            <div class="space-y-2.5 border-t border-slate-100 pt-5 dark:border-slate-800">
+              <app-tool-action-button
+                [label]="'Generate ' + selected().length + ' sizes'"
+                [busyLabel]="'Rendering… ' + progress() + '%'"
+                icon="share"
+                [busy]="generating()"
+                [disabled]="!canGenerate()"
+                (activated)="generate()"
+              />
+
+              @if (outputs().length > 1) {
+                <app-tool-action-button
+                  label="Download all as ZIP"
+                  busyLabel="Building ZIP…"
+                  icon="zip"
+                  variant="secondary"
+                  [busy]="zipping()"
+                  (activated)="downloadZip()"
+                />
+              }
+            </div>
+          </app-options-panel>
+        </aside>
+      </div>
+    }
+  } @else {
+    <app-file-uploader
+      heading="Drag & drop an image to resize"
+      [multiple]="false"
+      [rejected]="session.rejected()"
+      (filesSelected)="addFiles($event)"
+    />
+  }
+</app-tool-page>

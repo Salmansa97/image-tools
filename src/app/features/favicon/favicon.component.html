@@ -1,0 +1,330 @@
+<app-tool-page [content]="content">
+  @if (item(); as current) {
+    @if (!isMeasured()) {
+      <div
+        class="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center shadow-soft dark:border-slate-800 dark:bg-slate-900"
+        aria-live="polite"
+      >
+        <app-icon
+          name="spinner"
+          [size]="26"
+          svgClass="animate-spin"
+          class="text-brand-600 dark:text-brand-400"
+        />
+        <p class="mt-3 text-sm font-medium text-slate-600 dark:text-slate-400">
+          Reading {{ current.fileName }}…
+        </p>
+      </div>
+    } @else {
+      <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div class="order-2 min-w-0 lg:order-1">
+          <div
+            class="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft sm:p-5 dark:border-slate-800 dark:bg-slate-900"
+          >
+            <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div class="min-w-0">
+                <h2 class="truncate text-base font-bold" [title]="current.fileName">
+                  {{ current.fileName }}
+                </h2>
+                <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                  {{ current.width }} × {{ current.height }} px ·
+                  {{ current.sourceSize | fileSize }}
+                </p>
+              </div>
+              <button
+                type="button"
+                (click)="reset()"
+                class="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+              >
+                <app-icon name="refresh" [size]="14" />
+                Start over
+              </button>
+            </div>
+
+            @if (bundle(); as output) {
+              <!-- Icons rendered at their true size, which is the only honest preview -->
+              <h3 class="mb-3 text-sm font-bold">{{ output.icons.length }} icons generated</h3>
+              <ul class="grid gap-3 sm:grid-cols-2">
+                @for (icon of output.icons; track icon.fileName) {
+                  <li
+                    class="flex items-center gap-3 rounded-xl border border-slate-200 p-3 dark:border-slate-700"
+                  >
+                    <span
+                      class="checkerboard flex size-16 shrink-0 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700"
+                    >
+                      <img
+                        [src]="icon.url"
+                        [alt]="icon.label + ' icon'"
+                        [width]="icon.size > 64 ? 64 : icon.size"
+                        [height]="icon.size > 64 ? 64 : icon.size"
+                        style="image-rendering: pixelated"
+                      />
+                    </span>
+                    <span class="min-w-0 flex-1">
+                      <span class="block font-mono text-xs font-bold">{{ icon.label }}</span>
+                      <span
+                        class="mt-0.5 block truncate text-[11px] text-slate-500 dark:text-slate-400"
+                      >
+                        {{ icon.fileName }}
+                      </span>
+                      <span class="mt-0.5 block text-[11px] text-slate-400 dark:text-slate-500">
+                        {{ icon.purpose }} · {{ icon.blob.size | fileSize }}
+                      </span>
+                    </span>
+                  </li>
+                }
+              </ul>
+
+              <div class="mt-6 space-y-5 border-t border-slate-100 pt-6 dark:border-slate-800">
+                <div>
+                  <div class="mb-2 flex items-center justify-between gap-3">
+                    <h3 class="text-sm font-bold">Paste into your &lt;head&gt;</h3>
+                    <app-copy-button [value]="output.html" size="sm" label="Copy HTML" />
+                  </div>
+                  <pre
+                    class="overflow-x-auto rounded-xl bg-slate-900 p-4 text-[11px] leading-relaxed text-slate-100 dark:bg-slate-950"
+                  ><code>{{ output.html }}</code></pre>
+                </div>
+
+                <div>
+                  <div class="mb-2 flex items-center justify-between gap-3">
+                    <h3 class="text-sm font-bold">site.webmanifest</h3>
+                    <app-copy-button [value]="output.manifest" size="sm" label="Copy JSON" />
+                  </div>
+                  <pre
+                    class="max-h-56 overflow-auto rounded-xl bg-slate-900 p-4 text-[11px] leading-relaxed text-slate-100 dark:bg-slate-950"
+                  ><code>{{ output.manifest }}</code></pre>
+                </div>
+              </div>
+            } @else {
+              <div
+                class="flex h-64 flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 px-5 text-center dark:border-slate-700"
+              >
+                @if (generating()) {
+                  <app-icon
+                    name="spinner"
+                    [size]="26"
+                    svgClass="animate-spin"
+                    class="text-brand-600 dark:text-brand-400"
+                  />
+                  <p class="mt-3 text-sm font-medium text-slate-600 dark:text-slate-400">
+                    Rendering icons… {{ progress() }}%
+                  </p>
+                  <button
+                    type="button"
+                    (click)="cancel()"
+                    class="mt-3 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold dark:border-slate-700"
+                  >
+                    Cancel
+                  </button>
+                } @else {
+                  <span
+                    class="checkerboard flex size-20 items-center justify-center overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700"
+                  >
+                    <img
+                      [src]="current.previewUrl"
+                      [alt]="current.fileName"
+                      class="max-h-full max-w-full object-contain"
+                    />
+                  </span>
+                  <p class="mt-4 text-sm text-slate-500 dark:text-slate-400">
+                    Your icon set will appear here.
+                  </p>
+                  <p class="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                    {{ selectedSizes().length }} sizes selected
+                  </p>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <aside class="order-1 lg:order-2">
+          <app-options-panel heading="Icon options">
+            <div>
+              <div class="mb-2 flex items-center justify-between gap-2">
+                <p class="text-sm font-semibold">Sizes</p>
+                <span class="flex gap-2 text-xs">
+                  <button
+                    type="button"
+                    (click)="selectStandard()"
+                    class="font-semibold text-brand-700 hover:underline dark:text-brand-400"
+                  >
+                    Standard
+                  </button>
+                  <button
+                    type="button"
+                    (click)="selectAll()"
+                    class="font-semibold text-brand-700 hover:underline dark:text-brand-400"
+                  >
+                    All
+                  </button>
+                </span>
+              </div>
+
+              <ul class="space-y-1.5">
+                @for (size of allSizes; track size.size) {
+                  <li>
+                    <label
+                      class="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                    >
+                      <input
+                        type="checkbox"
+                        class="size-4 rounded border-slate-300 accent-brand-600 dark:border-slate-600"
+                        [checked]="isSelected(size.size)"
+                        (change)="toggleSize(size.size)"
+                      />
+                      <span class="font-mono text-xs font-semibold tabular-nums">
+                        {{ size.label }}
+                      </span>
+                      <span
+                        class="min-w-0 flex-1 truncate text-xs text-slate-500 dark:text-slate-400"
+                      >
+                        {{ size.purpose }}
+                      </span>
+                    </label>
+                  </li>
+                }
+              </ul>
+            </div>
+
+            <app-segmented-control
+              [(value)]="fit"
+              [options]="fitOptions"
+              label="How to make it square"
+              groupName="favicon-fit"
+            />
+
+            <label class="flex cursor-pointer items-start gap-2.5 text-sm font-medium">
+              <input
+                type="checkbox"
+                class="mt-0.5 size-4 rounded border-slate-300 accent-brand-600 dark:border-slate-600"
+                [checked]="transparent()"
+                (change)="transparent.set($any($event.target).checked)"
+              />
+              <span>
+                Keep the background transparent
+                <span class="mt-0.5 block text-xs font-normal text-slate-500 dark:text-slate-400">
+                  Untick to fill it with a colour instead.
+                </span>
+              </span>
+            </label>
+
+            @if (!transparent()) {
+              <div>
+                <label for="favicon-bg" class="mb-2 block text-sm font-semibold">
+                  Background colour
+                </label>
+                <div class="flex items-center gap-3">
+                  <input
+                    id="favicon-bg"
+                    type="color"
+                    class="size-10 cursor-pointer rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-950"
+                    [value]="background()"
+                    (input)="background.set($any($event.target).value)"
+                  />
+                  <span class="font-mono text-sm text-slate-600 dark:text-slate-400">
+                    {{ background() }}
+                  </span>
+                </div>
+              </div>
+            }
+
+            <label class="flex cursor-pointer items-start gap-2.5 text-sm font-medium">
+              <input
+                type="checkbox"
+                class="mt-0.5 size-4 rounded border-slate-300 accent-brand-600 dark:border-slate-600"
+                [checked]="includeIco()"
+                (change)="includeIco.set($any($event.target).checked)"
+              />
+              <span>
+                Include favicon.ico
+                <span class="mt-0.5 block text-xs font-normal text-slate-500 dark:text-slate-400">
+                  Bundles 16, 32 and 48 px into one file.
+                </span>
+              </span>
+            </label>
+
+            <div>
+              <label for="favicon-name" class="mb-1.5 block text-sm font-semibold">Site name</label>
+              <input
+                id="favicon-name"
+                type="text"
+                maxlength="60"
+                class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                [value]="appName()"
+                (input)="appName.set($any($event.target).value)"
+              />
+              <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                Used in the generated web manifest.
+              </p>
+            </div>
+
+            <div>
+              <label for="favicon-theme" class="mb-2 block text-sm font-semibold"
+                >Theme colour</label
+              >
+              <div class="flex items-center gap-3">
+                <input
+                  id="favicon-theme"
+                  type="color"
+                  class="size-10 cursor-pointer rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-950"
+                  [value]="themeColor()"
+                  (input)="themeColor.set($any($event.target).value)"
+                />
+                <span class="font-mono text-sm text-slate-600 dark:text-slate-400">
+                  {{ themeColor() }}
+                </span>
+              </div>
+            </div>
+
+            @if (!isSquare()) {
+              <app-alert tone="warning" title="This image is not square">
+                Icons are square, so it will be cropped or padded depending on the setting above.
+              </app-alert>
+            }
+
+            @if (isSmall()) {
+              <app-alert tone="warning" title="Source is smaller than the largest icon">
+                Upscaling a small source makes large icons look soft. A 512-pixel original is ideal.
+              </app-alert>
+            }
+
+            @if (errorMessage(); as message) {
+              <app-alert tone="error" title="Generation failed">{{ message }}</app-alert>
+            }
+
+            <div class="space-y-2.5 border-t border-slate-100 pt-5 dark:border-slate-800">
+              <app-tool-action-button
+                [label]="'Generate ' + selectedSizes().length + ' icons'"
+                [busyLabel]="'Rendering… ' + progress() + '%'"
+                icon="star"
+                [busy]="generating()"
+                [disabled]="!canGenerate()"
+                (activated)="generate()"
+              />
+
+              @if (bundle()) {
+                <app-tool-action-button
+                  label="Download the ZIP bundle"
+                  busyLabel="Building ZIP…"
+                  icon="zip"
+                  variant="secondary"
+                  [busy]="zipping()"
+                  (activated)="downloadZip()"
+                />
+              }
+            </div>
+          </app-options-panel>
+        </aside>
+      </div>
+    }
+  } @else {
+    <app-file-uploader
+      heading="Drag & drop your logo"
+      [multiple]="false"
+      [rejected]="session.rejected()"
+      (filesSelected)="addFiles($event)"
+    />
+  }
+</app-tool-page>

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>ImageTools — Free Online Image Compressor, Resizer, Cropper &amp; Converter</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Compress, resize, crop and convert images online for free. Every image is processed inside your browser, so your files never leave your device."
+    />
+    <meta name="theme-color" content="#7c3aed" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" sizes="any" />
+    <link rel="manifest" href="site.webmanifest" />
+    <script>
+      // Applied before first paint so a dark-theme reload never flashes white.
+      (function () {
+        try {
+          var stored = localStorage.getItem('imagetools-theme');
+          var dark = stored
+            ? stored === 'dark'
+            : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.classList.toggle('dark', dark);
+        } catch (e) {
+          /* storage blocked — fall back to the light theme */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <app-root></app-root>
+    <noscript>
+      <div style="padding: 2rem; font-family: system-ui, sans-serif">
+        <h1>JavaScript is required</h1>
+        <p>
+          ImageTools compresses, resizes, crops and converts your pictures directly on your device.
+          Please enable JavaScript to use the tools.
+        </p>
+      </div>
+    </noscript>
+  </body>
+</html>

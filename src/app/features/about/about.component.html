@@ -1,0 +1,134 @@
+<div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+  <app-page-hero
+    heading="About ImageTools"
+    lead="A complete set of image tools that never sees your images. Here is what that means, how it works, and why we built it this way."
+    eyebrow="No servers, no uploads, no accounts"
+    [breadcrumbs]="breadcrumbs"
+  />
+
+  <div class="mt-14 grid gap-12 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div class="max-w-3xl">
+      <section aria-labelledby="about-problem">
+        <h2 id="about-problem" class="text-2xl font-bold sm:text-3xl">
+          The problem with online image tools
+        </h2>
+        <p class="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">
+          Almost every free image tool on the web works the same way: you upload your picture to a
+          server, something happens to it there, and you download the result. That model asks you to
+          trust an organisation you know nothing about with a file you may care a great deal about —
+          a passport scan, a medical document, a photograph of your children, a screenshot of
+          something confidential from work.
+        </p>
+        <p class="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">
+          Most of those sites publish a privacy policy promising that files are deleted after an
+          hour. You have no way to verify it. The file was still transmitted across the internet,
+          still written to a disk you do not control, and still handled by code you cannot inspect.
+        </p>
+      </section>
+
+      <section class="mt-12" aria-labelledby="about-approach">
+        <h2 id="about-approach" class="text-2xl font-bold sm:text-3xl">A different approach</h2>
+        <p class="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">
+          Modern browsers already contain everything needed to decode, transform and re-encode an
+          image. The same engine that displays a JPEG on a web page can read it into a canvas,
+          resize it, and write a new file back out — all in memory, on your own machine.
+        </p>
+        <p class="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">
+          ImageTools is built entirely on those capabilities. When you add a picture, it is read
+          directly from your disk into your browser's memory. The processing runs in Web Workers,
+          which are background threads, so even a large batch does not freeze the page. The result
+          comes back as a file your browser offers you to save. At no point does any image data
+          touch a network connection.
+        </p>
+        <p class="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">
+          You do not have to take our word for it. Open your browser's developer tools, switch to
+          the network tab, and process an image. You will see no upload. Better still, load the page
+          and then disconnect from the internet entirely — every tool keeps working.
+        </p>
+      </section>
+
+      <section class="mt-12" aria-labelledby="about-tech">
+        <h2 id="about-tech" class="text-2xl font-bold sm:text-3xl">How it is built</h2>
+        <p class="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">
+          The site is an Angular application using standalone components and signals. Pages are
+          prerendered at build time, which means a search engine — or a visitor on a slow connection
+          — receives complete, readable HTML without waiting for JavaScript.
+        </p>
+
+        <ul class="mt-6 space-y-3">
+          @for (item of techStack; track item.title) {
+            <li class="flex items-start gap-3">
+              <span
+                class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
+              >
+                <app-icon name="check" [size]="12" [strokeWidth]="2.5" />
+              </span>
+              <span class="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+                <strong class="font-semibold text-slate-900 dark:text-white">{{
+                  item.title
+                }}</strong>
+                — {{ item.body }}
+              </span>
+            </li>
+          }
+        </ul>
+      </section>
+
+      <section class="mt-12" aria-labelledby="about-limits">
+        <h2 id="about-limits" class="text-2xl font-bold sm:text-3xl">
+          What this approach cannot do
+        </h2>
+        <p class="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">
+          Honesty matters more than marketing, so here are the trade-offs. Processing happens with
+          your device's memory and processor, which means a ten-year-old phone will be slower than a
+          current laptop, and an extremely large batch can exhaust available memory.
+        </p>
+        <p class="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">
+          We are also limited to formats browsers can both read and write: JPG, PNG and WebP. A
+          server-side tool can offer HEIC, AVIF, TIFF and RAW because it can bundle any library it
+          likes. We cannot — and we would rather tell you that than quietly convert your file into
+          something mislabelled.
+        </p>
+        <p class="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">
+          Finally, PNG compression is genuinely harder without a dedicated encoder. We reduce the
+          colour palette, which works well for graphics and screenshots, but a specialist tool will
+          beat us on photographic PNGs. For those, converting to WebP will save far more than any
+          PNG optimiser.
+        </p>
+      </section>
+    </div>
+
+    <aside>
+      <div
+        class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft lg:sticky lg:top-24 dark:border-slate-800 dark:bg-slate-900"
+      >
+        <h2 class="text-base font-bold">At a glance</h2>
+        <dl class="mt-4 space-y-4 text-sm">
+          @for (fact of facts; track fact.term) {
+            <div
+              class="flex items-baseline justify-between gap-4 border-b border-slate-100 pb-3 last:border-0 last:pb-0 dark:border-slate-800"
+            >
+              <dt class="text-slate-500 dark:text-slate-400">{{ fact.term }}</dt>
+              <dd class="text-right font-semibold">{{ fact.value }}</dd>
+            </div>
+          }
+        </dl>
+
+        <a
+          routerLink="/privacy-policy"
+          class="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold transition-colors hover:border-brand-300 hover:text-brand-700 dark:border-slate-700 dark:hover:border-brand-500 dark:hover:text-brand-300"
+        >
+          <app-icon name="lock" [size]="15" />
+          Read the privacy policy
+        </a>
+      </div>
+    </aside>
+  </div>
+
+  <div class="mt-20">
+    <app-related-tools
+      heading="Try a tool"
+      subheading="All four work the same way: locally, privately and for free."
+    />
+  </div>
+</div>

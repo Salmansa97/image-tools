@@ -1,0 +1,130 @@
+<div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+  <app-page-hero
+    heading="Processing History"
+    lead="A record of what you have run through ImageTools on this device. Only file names, sizes and settings are kept — never the images themselves — and it never leaves your browser."
+    eyebrow="Stored locally, never uploaded"
+    [breadcrumbs]="breadcrumbs"
+  />
+
+  <div class="mt-10 max-w-4xl">
+    @if (!history.available()) {
+      <app-alert tone="info" title="History is unavailable in this browser">
+        Your browser is blocking local database storage, which private-browsing modes often do.
+        Every tool still works exactly as normal — only this log is affected.
+      </app-alert>
+    } @else if (isEmpty()) {
+      <div
+        class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 px-6 py-20 text-center dark:border-slate-700"
+      >
+        <app-icon name="history" [size]="30" class="text-slate-300 dark:text-slate-600" />
+        <h2 class="mt-4 text-lg font-bold">Nothing here yet</h2>
+        <p class="mt-2 max-w-md text-sm text-slate-500 dark:text-slate-400">
+          Once you compress, convert or edit an image, a short record of it appears here so you can
+          see what you did and jump back to the tool.
+        </p>
+        <a
+          routerLink="/tools"
+          class="mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-accent-600 px-5 py-2.5 text-sm font-bold text-white shadow-soft transition-all hover:shadow-lift"
+        >
+          Browse the tools
+          <app-icon name="arrow-right" [size]="16" />
+        </a>
+      </div>
+    } @else if (history.loaded()) {
+      <div
+        class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 dark:border-slate-800 dark:bg-slate-900/50"
+      >
+        <div>
+          <p class="text-sm font-bold">
+            {{ history.count() }} {{ history.count() === 1 ? 'operation' : 'operations' }}
+          </p>
+          @if (history.totalSaved() > 0) {
+            <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+              {{ history.totalSaved() | fileSize }} saved in total
+            </p>
+          }
+        </div>
+        <button
+          type="button"
+          (click)="clear()"
+          class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition-colors hover:border-rose-300 hover:text-rose-600 dark:border-slate-700 dark:text-slate-300 dark:hover:border-rose-500/40 dark:hover:text-rose-400"
+        >
+          <app-icon name="trash" [size]="14" />
+          Clear history
+        </button>
+      </div>
+
+      <ul class="space-y-3">
+        @for (record of history.records(); track record.id) {
+          <li
+            class="flex flex-wrap items-start gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-900"
+          >
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <a
+                  [routerLink]="record.toolPath"
+                  class="rounded-md bg-brand-50 px-2 py-0.5 text-[11px] font-bold text-brand-700 transition-colors hover:bg-brand-100 dark:bg-brand-500/15 dark:text-brand-300"
+                >
+                  {{ record.toolName }}
+                </a>
+                <span class="text-xs text-slate-400 dark:text-slate-500">
+                  {{ when(record.at) }}
+                </span>
+              </div>
+
+              <p class="mt-1.5 truncate text-sm font-semibold" [title]="record.fileName">
+                {{ record.fileName }}
+              </p>
+              <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ record.summary }}</p>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="text-right">
+                <p class="text-xs text-slate-400 line-through dark:text-slate-500">
+                  {{ record.sourceSize | fileSize }}
+                </p>
+                <p class="text-sm font-bold">{{ record.resultSize | fileSize }}</p>
+                @if (record.resultType) {
+                  <p class="text-[11px] text-slate-400 dark:text-slate-500">
+                    {{ record.resultType | formatLabel }}
+                    @if (record.width > 0) {
+                      · {{ record.width }} × {{ record.height }}
+                    }
+                  </p>
+                }
+              </div>
+
+              @if (saved(record.sourceSize, record.resultSize) > 0) {
+                <span
+                  class="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                >
+                  −{{ saved(record.sourceSize, record.resultSize) }}%
+                </span>
+              }
+
+              <button
+                type="button"
+                (click)="remove(record.id)"
+                class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
+                [attr.aria-label]="'Remove the record for ' + record.fileName"
+              >
+                <app-icon name="close" [size]="16" />
+              </button>
+            </div>
+          </li>
+        }
+      </ul>
+
+      <p class="mt-6 text-xs text-slate-500 dark:text-slate-400">
+        Records are kept in your browser's local database and capped at the most recent 200. No
+        image data is stored, and nothing here is ever sent anywhere. Read the
+        <a
+          routerLink="/privacy-policy"
+          class="font-semibold text-brand-700 hover:underline dark:text-brand-400"
+          >privacy policy</a
+        >
+        for details.
+      </p>
+    }
+  </div>
+</div>

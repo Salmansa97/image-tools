@@ -1,0 +1,71 @@
+<div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+  <app-page-hero
+    heading="Privacy Policy"
+    lead="The short version: your images are processed on your device and are never uploaded. The rest of this page explains precisely what that means."
+    eyebrow="No uploads, no tracking, no cookies"
+    [breadcrumbs]="breadcrumbs"
+  />
+
+  <div class="mt-12 grid gap-12 lg:grid-cols-[240px_minmax(0,1fr)]">
+    <nav class="lg:order-2 lg:sticky lg:top-24 lg:self-start" aria-labelledby="toc-heading">
+      <h2
+        id="toc-heading"
+        class="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+      >
+        On this page
+      </h2>
+      <ul class="mt-3 space-y-1.5">
+        @for (section of sections; track section.id) {
+          <li>
+            <a
+              [routerLink]="['/privacy-policy']"
+              [fragment]="section.id"
+              class="block rounded-lg px-2 py-1 text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-brand-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-brand-400"
+            >
+              {{ section.title }}
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <div class="max-w-3xl lg:order-1">
+      <div
+        class="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 dark:border-emerald-500/30 dark:bg-emerald-500/10"
+      >
+        <app-icon
+          name="shield"
+          [size]="20"
+          class="mt-0.5 shrink-0 text-emerald-700 dark:text-emerald-400"
+        />
+        <p class="text-sm leading-relaxed text-emerald-900 dark:text-emerald-200">
+          <strong class="font-bold">Nothing you process here is ever transmitted.</strong>
+          Every tool runs on your own hardware using your browser's built-in image engine. There is
+          no upload step, which means there is no copy of your files anywhere but on your device.
+        </p>
+      </div>
+
+      @for (section of sections; track section.id) {
+        <section [id]="section.id" class="mt-10">
+          <h2 class="text-2xl font-bold">{{ section.title }}</h2>
+          @for (paragraph of section.paragraphs; track paragraph) {
+            <p class="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">
+              {{ paragraph }}
+            </p>
+          }
+        </section>
+      }
+
+      <p class="mt-12 text-sm text-slate-500 dark:text-slate-400">
+        Still have a question?
+        <a
+          routerLink="/about"
+          class="font-semibold text-brand-700 hover:underline dark:text-brand-400"
+        >
+          Read more about how ImageTools works
+        </a>
+        .
+      </p>
+    </div>
+  </div>
+</div>

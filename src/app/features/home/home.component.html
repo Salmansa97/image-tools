@@ -1,0 +1,488 @@
+<!-- ============================== HERO ============================== -->
+<section class="relative isolate overflow-hidden" aria-labelledby="hero-heading">
+  <app-aurora intensity="strong" />
+  <div class="grain pointer-events-none absolute inset-0 -z-10"></div>
+
+  <div class="mx-auto max-w-7xl px-4 pt-14 pb-20 sm:px-6 sm:pt-20 lg:px-8">
+    <div class="grid items-center gap-14 lg:grid-cols-[1.05fr_0.95fr]">
+      <!-- Copy + uploader -->
+      <div>
+        <p
+          class="animate-fade-in mb-6 inline-flex items-center gap-2 rounded-full border border-brand-200/70 bg-white/70 py-1.5 pr-4 pl-1.5 text-xs font-semibold text-brand-700 shadow-sm backdrop-blur-md dark:border-brand-400/25 dark:bg-white/5 dark:text-brand-200"
+        >
+          <span
+            class="flex size-6 items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-accent-600 text-white"
+          >
+            <app-icon name="shield" [size]="13" />
+          </span>
+          100% private — nothing ever leaves your device
+        </p>
+
+        <h1
+          id="hero-heading"
+          class="animate-fade-up text-[2.6rem] leading-[1.05] font-extrabold tracking-tight sm:text-6xl lg:text-[4.1rem]"
+        >
+          All Your Image Tools
+          <span class="text-gradient block">in One Place</span>
+        </h1>
+
+        <p
+          class="animate-fade-up mt-6 max-w-xl text-lg leading-relaxed text-slate-600 dark:text-slate-300"
+        >
+          Compress, resize, crop and convert images online for free.
+          <span class="font-semibold text-slate-900 dark:text-white">
+            Fast, secure and completely private.
+          </span>
+        </p>
+
+        <!-- Upload / tool chooser -->
+        <div class="animate-fade-up mt-9">
+          @if (stagedFiles().length === 0) {
+            <app-file-uploader
+              heading="Drag & drop your images here"
+              [rejected]="rejected()"
+              (filesSelected)="onFilesSelected($event)"
+            />
+          } @else {
+            <div
+              class="animate-pop rounded-2xl border border-brand-200 bg-white/90 p-6 shadow-glow backdrop-blur-xl sm:p-7 dark:border-brand-400/30 dark:bg-slate-900/80"
+              role="dialog"
+              aria-labelledby="chooser-heading"
+              aria-modal="false"
+            >
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <h2 id="chooser-heading" class="text-lg font-bold">
+                    {{ stagedFiles().length }}
+                    {{ stagedFiles().length === 1 ? 'image ready' : 'images ready' }}
+                  </h2>
+                  <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                    What would you like to do with
+                    {{ stagedFiles().length === 1 ? 'it' : 'them' }}?
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  (click)="cancelSelection()"
+                  class="shrink-0 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                  aria-label="Clear the selected images"
+                >
+                  <app-icon name="close" [size]="18" />
+                </button>
+              </div>
+
+              <div class="mt-6 grid gap-3 sm:grid-cols-2">
+                @for (tool of tools; track tool.id) {
+                  <button
+                    type="button"
+                    (click)="openWith(tool)"
+                    class="group glow-ring flex items-center gap-3.5 rounded-xl border border-slate-200 p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-soft dark:border-slate-700"
+                  >
+                    <span
+                      class="flex size-10 shrink-0 items-center justify-center rounded-xl text-white transition-transform group-hover:scale-110"
+                      [class]="tool.accent"
+                    >
+                      <app-icon [name]="tool.icon" [size]="20" />
+                    </span>
+                    <span class="min-w-0">
+                      <span class="block text-sm font-bold">{{ tool.navLabel }}</span>
+                      <span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+                        {{ tool.tagline }}
+                      </span>
+                    </span>
+                  </button>
+                }
+              </div>
+
+              <p class="mt-5 text-xs text-slate-500 dark:text-slate-400">
+                The resizer and cropper work on one image at a time — they will open with the first
+                file.
+              </p>
+            </div>
+          }
+        </div>
+
+        <ul
+          class="animate-fade-up mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-slate-500 dark:text-slate-400"
+        >
+          @for (point of heroPoints; track point) {
+            <li class="flex items-center gap-1.5">
+              <app-icon name="check" [size]="14" class="text-emerald-600 dark:text-emerald-400" />
+              {{ point }}
+            </li>
+          }
+        </ul>
+      </div>
+
+      <!-- Live demo -->
+      <div class="animate-fade-up relative lg:pl-4">
+        <div class="animate-float">
+          <app-hero-demo />
+        </div>
+
+        <!-- Floating tool pills -->
+        <span
+          class="animate-float absolute -top-4 -left-2 hidden items-center gap-1.5 rounded-xl border border-slate-200/70 bg-white/85 px-3 py-2 text-xs font-bold shadow-lift backdrop-blur-md lg:inline-flex dark:border-white/10 dark:bg-slate-900/85"
+          style="animation-delay: -2s"
+          aria-hidden="true"
+        >
+          <app-icon name="bolt" [size]="14" class="text-amber-500" />
+          No upload
+        </span>
+        <span
+          class="animate-float absolute -right-1 -bottom-4 hidden items-center gap-1.5 rounded-xl border border-slate-200/70 bg-white/85 px-3 py-2 text-xs font-bold shadow-lift backdrop-blur-md lg:inline-flex dark:border-white/10 dark:bg-slate-900/85"
+          style="animation-delay: -4.5s"
+          aria-hidden="true"
+        >
+          <app-icon name="lock" [size]="14" class="text-emerald-500" />
+          Runs offline
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Format marquee -->
+  <div
+    class="relative border-y border-slate-200/70 bg-white/50 py-4 backdrop-blur-sm dark:border-white/5 dark:bg-white/[0.02]"
+  >
+    <div class="marquee-mask overflow-hidden">
+      <div class="animate-marquee flex w-max gap-10 pr-10">
+        @for (item of marqueeLoop; track item.key) {
+          <span
+            class="flex items-center gap-2 text-sm font-semibold whitespace-nowrap text-slate-400 dark:text-slate-500"
+            [attr.aria-hidden]="item.duplicate ? 'true' : null"
+          >
+            <app-icon [name]="item.icon" [size]="15" />
+            {{ item.label }}
+          </span>
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== STATS ============================== -->
+<section class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8" aria-label="At a glance">
+  <dl class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    @for (stat of stats; track stat.label; let i = $index) {
+      <div
+        [appReveal]="i * 80"
+        class="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-soft dark:border-slate-800 dark:bg-slate-900"
+      >
+        <dt class="sr-only">{{ stat.label }}</dt>
+        <dd>
+          <span class="block text-4xl font-extrabold tracking-tight text-gradient">
+            <app-count-up [value]="stat.value" [prefix]="stat.prefix" [suffix]="stat.suffix" />
+          </span>
+          <span class="mt-2 block text-sm font-bold">{{ stat.label }}</span>
+          <span class="mt-1 block text-xs text-slate-500 dark:text-slate-400">{{ stat.note }}</span>
+        </dd>
+      </div>
+    }
+  </dl>
+</section>
+
+<!-- ============================== TOOLS ============================== -->
+<section
+  class="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8"
+  aria-labelledby="tools-heading"
+>
+  <div appReveal class="max-w-2xl">
+    <p
+      class="mb-3 inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-xs font-bold tracking-wide text-brand-700 uppercase dark:bg-brand-500/10 dark:text-brand-300"
+    >
+      <app-icon name="grid" [size]="13" />
+      The toolkit
+    </p>
+    <h2 id="tools-heading" class="text-3xl font-bold tracking-tight sm:text-4xl">
+      Everything you need, nothing you don't
+    </h2>
+    <p class="mt-3 text-base text-slate-600 dark:text-slate-400">
+      Four tools people reach for every day, plus {{ allTools.length - tools.length }} more for the
+      jobs that come up less often.
+    </p>
+  </div>
+
+  <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    @for (tool of tools; track tool.id; let i = $index) {
+      <a
+        [routerLink]="tool.path"
+        [appReveal]="i * 90"
+        class="group glow-ring relative flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white p-7 shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-glow dark:border-slate-800 dark:bg-slate-900"
+      >
+        <!-- Ambient wash that warms on hover -->
+        <span
+          class="pointer-events-none absolute -top-16 -right-16 size-44 rounded-full opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-60"
+          [class]="tool.accent"
+          aria-hidden="true"
+        ></span>
+
+        <span
+          class="relative flex size-14 items-center justify-center rounded-2xl text-white shadow-lift transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6"
+          [class]="tool.accent"
+        >
+          <app-icon [name]="tool.icon" [size]="27" [strokeWidth]="1.7" />
+        </span>
+
+        <span class="relative mt-5 flex flex-1 flex-col">
+          <span class="text-lg font-bold">{{ tool.name }}</span>
+          <span
+            class="mt-0.5 text-[11px] font-bold tracking-wide text-brand-600 uppercase dark:text-brand-400"
+          >
+            {{ tool.tagline }}
+          </span>
+          <span class="mt-3 flex-1 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+            {{ tool.description }}
+          </span>
+          <span
+            class="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-brand-700 dark:text-brand-400"
+          >
+            Open tool
+            <app-icon
+              name="arrow-right"
+              [size]="15"
+              svgClass="transition-transform duration-300 group-hover:translate-x-1.5"
+            />
+          </span>
+        </span>
+      </a>
+    }
+  </div>
+
+  <!-- The rest, as chips -->
+  <div
+    appReveal
+    class="mt-10 rounded-3xl border border-slate-200 bg-slate-50/70 p-7 dark:border-slate-800 dark:bg-slate-900/40"
+  >
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <h3 class="text-lg font-bold">
+        And {{ allTools.length - tools.length }} more specialist tools
+      </h3>
+      <a
+        routerLink="/tools"
+        class="inline-flex min-h-6 items-center gap-2 py-1 text-sm font-bold text-brand-700 hover:underline dark:text-brand-400"
+      >
+        See all {{ allTools.length }}
+        <app-icon name="arrow-right" [size]="15" />
+      </a>
+    </div>
+
+    <ul class="mt-5 flex flex-wrap gap-2.5">
+      @for (tool of allTools; track tool.id) {
+        @if (!tool.featured) {
+          <li>
+            <a
+              [routerLink]="tool.path"
+              class="group inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-soft dark:border-slate-700 dark:bg-slate-900 dark:hover:border-brand-500/40"
+            >
+              <span
+                class="flex size-6 items-center justify-center rounded-md text-white transition-transform group-hover:scale-110"
+                [class]="tool.accent"
+              >
+                <app-icon [name]="tool.icon" [size]="13" />
+              </span>
+              {{ tool.name }}
+            </a>
+          </li>
+        }
+      }
+    </ul>
+  </div>
+</section>
+
+<!-- =========================== HOW IT WORKS =========================== -->
+<section
+  class="relative isolate overflow-hidden border-y border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/40"
+  aria-labelledby="how-heading"
+>
+  <app-aurora />
+
+  <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+    <div appReveal class="max-w-2xl">
+      <h2 id="how-heading" class="text-3xl font-bold tracking-tight sm:text-4xl">How it works</h2>
+      <p class="mt-3 text-base text-slate-600 dark:text-slate-400">
+        Four steps, no account, no waiting for an upload to finish.
+      </p>
+    </div>
+
+    <ol class="relative mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <!-- Connecting line, desktop only -->
+      <span
+        class="pointer-events-none absolute top-11 right-10 left-10 hidden h-px bg-gradient-to-r from-brand-300 via-accent-300 to-hot-400 opacity-50 lg:block dark:from-brand-600 dark:via-accent-600 dark:to-hot-600"
+        aria-hidden="true"
+      ></span>
+
+      @for (step of steps; track step.title; let i = $index) {
+        <li
+          [appReveal]="i * 110"
+          class="group relative rounded-2xl border border-slate-200 bg-white p-6 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lift dark:border-slate-800 dark:bg-slate-900"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              class="relative flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-600 to-accent-600 text-white shadow-lift transition-transform duration-300 group-hover:scale-110"
+            >
+              <app-icon [name]="step.icon" [size]="20" />
+            </span>
+            <span class="font-mono text-2xl font-extrabold text-slate-200 dark:text-slate-700">
+              0{{ i + 1 }}
+            </span>
+          </div>
+          <h3 class="mt-4 text-base font-bold">{{ step.title }}</h3>
+          <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+            {{ step.body }}
+          </p>
+        </li>
+      }
+    </ol>
+  </div>
+</section>
+
+<!-- ============================ WHY CHOOSE ============================ -->
+<section
+  class="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8"
+  aria-labelledby="why-heading"
+>
+  <div appReveal class="max-w-2xl">
+    <p
+      class="mb-3 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold tracking-wide text-emerald-700 uppercase dark:bg-emerald-500/10 dark:text-emerald-300"
+    >
+      <app-icon name="shield" [size]="13" />
+      Privacy you can verify
+    </p>
+    <h2 id="why-heading" class="text-3xl font-bold tracking-tight sm:text-4xl">
+      Why choose ImageTools?
+    </h2>
+    <p class="mt-3 text-base text-slate-600 dark:text-slate-400">
+      Most online image tools upload your files to a server you know nothing about. This one does
+      not have a server at all.
+    </p>
+  </div>
+
+  <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    @for (benefit of benefits; track benefit.title; let i = $index) {
+      <article
+        [appReveal]="i * 80"
+        class="group glow-ring relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lift dark:border-slate-800 dark:bg-slate-900"
+      >
+        <span
+          class="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-50 to-accent-50 text-brand-700 transition-transform duration-300 group-hover:scale-110 dark:from-brand-500/15 dark:to-accent-500/15 dark:text-brand-300"
+        >
+          <app-icon [name]="benefit.icon" [size]="22" />
+        </span>
+        <h3 class="mt-4 text-base font-bold">{{ benefit.title }}</h3>
+        <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+          {{ benefit.body }}
+        </p>
+      </article>
+    }
+  </div>
+</section>
+
+<!-- =========================== POPULAR TOOLS =========================== -->
+<section
+  class="border-y border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/40"
+  aria-labelledby="popular-heading"
+>
+  <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+    <div appReveal class="max-w-2xl">
+      <h2 id="popular-heading" class="text-3xl font-bold tracking-tight sm:text-4xl">
+        Popular image tools
+      </h2>
+      <p class="mt-3 text-base text-slate-600 dark:text-slate-400">
+        The conversions and adjustments people reach for most often.
+      </p>
+    </div>
+
+    <ul class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      @for (link of popular; track link.path + link.name; let i = $index) {
+        <li [appReveal]="i * 60">
+          <a
+            [routerLink]="link.path"
+            class="group glow-ring flex h-full items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:-translate-y-1 hover:shadow-lift dark:border-slate-800 dark:bg-slate-900"
+          >
+            <span class="min-w-0">
+              <span class="block text-sm font-bold">{{ link.name }}</span>
+              <span class="mt-1 block text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                {{ link.description }}
+              </span>
+            </span>
+            <app-icon
+              name="chevron-right"
+              [size]="16"
+              class="mt-0.5 shrink-0 text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-brand-600 dark:text-slate-600"
+            />
+          </a>
+        </li>
+      }
+    </ul>
+  </div>
+</section>
+
+<!-- =============================== FAQ =============================== -->
+<section
+  id="faq"
+  class="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8"
+  aria-labelledby="faq-heading"
+>
+  <div appReveal class="max-w-2xl">
+    <h2 id="faq-heading" class="text-3xl font-bold tracking-tight sm:text-4xl">
+      Frequently asked questions
+    </h2>
+    <p class="mt-3 text-base text-slate-600 dark:text-slate-400">
+      Everything people usually want to know before trusting a tool with their pictures.
+    </p>
+  </div>
+
+  <div appReveal class="mt-10 max-w-3xl">
+    <app-faq-accordion [entries]="faqs" />
+  </div>
+</section>
+
+<!-- =============================== CTA =============================== -->
+<section class="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
+  <div
+    appReveal
+    class="relative isolate overflow-hidden rounded-[2rem] bg-gradient-to-br from-brand-600 via-brand-700 to-accent-700 px-6 py-16 text-center sm:px-12 sm:py-20"
+  >
+    <div class="grain pointer-events-none absolute inset-0"></div>
+    <span
+      class="animate-drift pointer-events-none absolute -top-24 -left-20 size-80 rounded-full bg-white/15 blur-3xl"
+      aria-hidden="true"
+    ></span>
+    <span
+      class="animate-drift-slow pointer-events-none absolute -right-16 -bottom-28 size-96 rounded-full bg-hot-500/25 blur-3xl"
+      aria-hidden="true"
+    ></span>
+
+    <div class="relative">
+      <h2 class="text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
+        Ready when you are
+      </h2>
+      <p class="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-brand-100">
+        No account, no upload, no waiting. Pick a tool and your images are processed in seconds,
+        right here on your device.
+      </p>
+
+      <div class="mt-9 flex flex-wrap items-center justify-center gap-3">
+        @for (tool of tools; track tool.id) {
+          <a
+            [routerLink]="tool.path"
+            class="inline-flex items-center gap-2 rounded-xl bg-white/15 px-5 py-3 text-sm font-bold text-white ring-1 ring-white/20 backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-white/25"
+          >
+            <app-icon [name]="tool.icon" [size]="16" />
+            {{ tool.navLabel }}
+          </a>
+        }
+      </div>
+
+      <a
+        routerLink="/tools"
+        class="mt-7 inline-flex min-h-6 items-center gap-2 py-1 text-sm font-bold text-brand-100 underline-offset-4 hover:underline"
+      >
+        Or browse all {{ allTools.length }} tools
+        <app-icon name="arrow-right" [size]="15" />
+      </a>
+    </div>
+  </div>
+</section>

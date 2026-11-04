@@ -1,0 +1,131 @@
+<header
+  class="sticky top-0 z-50 transition-all duration-300"
+  [class]="
+    scrolled()
+      ? 'border-b border-slate-200/70 bg-white/80 shadow-soft backdrop-blur-xl dark:border-white/5 dark:bg-slate-950/80'
+      : 'border-b border-transparent bg-white/60 backdrop-blur-md dark:bg-slate-950/50'
+  "
+>
+  <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+    <a
+      routerLink="/"
+      class="group flex shrink-0 items-center gap-2.5 rounded-lg"
+      aria-label="ImageTools — go to the home page"
+    >
+      <span
+        class="relative flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-600 to-accent-600 text-white shadow-lift transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6"
+      >
+        <app-icon name="sparkles" [size]="19" [strokeWidth]="1.8" />
+      </span>
+      <span class="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">
+        Image<span class="text-brand-600 dark:text-brand-400">Tools</span>
+      </span>
+    </a>
+
+    <nav class="hidden items-center gap-1 lg:flex" aria-label="Main navigation">
+      <a
+        routerLink="/"
+        routerLinkActive="!text-brand-700 !bg-brand-50 dark:!text-brand-300 dark:!bg-brand-500/10"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+      >
+        Home
+      </a>
+
+      @for (tool of tools; track tool.id) {
+        <a
+          [routerLink]="tool.path"
+          routerLinkActive="!text-brand-700 !bg-brand-50 dark:!text-brand-300 dark:!bg-brand-500/10"
+          class="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+        >
+          {{ tool.navLabel }}
+        </a>
+      }
+
+      <a
+        routerLink="/tools"
+        routerLinkActive="!text-brand-700 !bg-brand-50 dark:!text-brand-300 dark:!bg-brand-500/10"
+        class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+      >
+        All Tools
+        <span
+          class="rounded-md bg-brand-100 px-1.5 py-0.5 text-[10px] font-bold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300"
+          >{{ allTools.length }}</span
+        >
+      </a>
+
+      <a
+        routerLink="/about"
+        routerLinkActive="!text-brand-700 !bg-brand-50 dark:!text-brand-300 dark:!bg-brand-500/10"
+        class="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+      >
+        About
+      </a>
+    </nav>
+
+    <div class="flex items-center gap-1.5">
+      <button
+        type="button"
+        (click)="theme.toggle()"
+        class="flex size-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+        [attr.aria-label]="
+          theme.isDark() ? 'Switch to the light theme' : 'Switch to the dark theme'
+        "
+        [attr.aria-pressed]="theme.isDark()"
+      >
+        <app-icon [name]="theme.isDark() ? 'sun' : 'moon'" [size]="18" />
+      </button>
+
+      <button
+        type="button"
+        (click)="toggleMenu()"
+        class="flex size-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-colors hover:bg-slate-100 lg:hidden dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+        [attr.aria-label]="menuOpen() ? 'Close the menu' : 'Open the menu'"
+        [attr.aria-expanded]="menuOpen()"
+        aria-controls="mobile-navigation"
+      >
+        <app-icon [name]="menuOpen() ? 'close' : 'menu'" [size]="19" />
+      </button>
+    </div>
+  </div>
+
+  @if (menuOpen()) {
+    <nav
+      id="mobile-navigation"
+      class="animate-fade-in border-t border-slate-200 bg-white px-4 pb-4 pt-2 lg:hidden dark:border-slate-800 dark:bg-slate-950"
+      aria-label="Mobile navigation"
+    >
+      <a
+        routerLink="/"
+        (click)="closeMenu()"
+        class="block rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+      >
+        Home
+      </a>
+
+      @for (tool of tools; track tool.id) {
+        <a
+          [routerLink]="tool.path"
+          (click)="closeMenu()"
+          class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+        >
+          <span
+            class="flex size-7 items-center justify-center rounded-lg text-white"
+            [class]="tool.accent"
+          >
+            <app-icon [name]="tool.icon" [size]="15" />
+          </span>
+          {{ tool.name }}
+        </a>
+      }
+
+      <a
+        routerLink="/about"
+        (click)="closeMenu()"
+        class="block rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+      >
+        About
+      </a>
+    </nav>
+  }
+</header>

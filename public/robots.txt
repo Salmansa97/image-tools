@@ -1,0 +1,10 @@
+# ImageTools — all image processing happens in the visitor's browser.
+User-agent: *
+Allow: /
+
+# Build artefacts hold no indexable content.
+Disallow: /*.js$
+Disallow: /*.css$
+Disallow: /*.map$
+
+Sitemap: https://imagetools.app/sitemap.xml

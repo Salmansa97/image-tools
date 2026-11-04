@@ -1,0 +1,408 @@
+<app-tool-page [content]="content">
+  @if (item(); as current) {
+    @if (!ready()) {
+      <div
+        class="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center shadow-soft dark:border-slate-800 dark:bg-slate-900"
+        aria-live="polite"
+      >
+        <app-icon
+          name="spinner"
+          [size]="26"
+          svgClass="animate-spin"
+          class="text-brand-600 dark:text-brand-400"
+        />
+        <p class="mt-3 text-sm font-medium text-slate-600 dark:text-slate-400">
+          Analysing {{ current.fileName }}…
+        </p>
+      </div>
+    } @else {
+      <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <!-- Canvas -->
+        <div class="order-2 min-w-0 lg:order-1">
+          <div
+            class="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft sm:p-5 dark:border-slate-800 dark:bg-slate-900"
+          >
+            <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div class="min-w-0">
+                <h2 class="truncate text-base font-bold" [title]="current.fileName">
+                  {{ current.fileName }}
+                </h2>
+                <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                  {{ current.width }} × {{ current.height }} px ·
+                  {{ current.sourceSize | fileSize }} ·
+                  <span class="font-semibold text-brand-600 dark:text-brand-400">
+                    {{ removedPercent() }}% removed
+                  </span>
+                </p>
+              </div>
+
+              <button
+                type="button"
+                (click)="reset()"
+                class="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+              >
+                <app-icon name="refresh" [size]="14" />
+                Start over
+              </button>
+            </div>
+
+            <div
+              class="checkerboard relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800"
+              [style.background]="
+                effectiveBackdrop() === 'transparent' ? null : effectiveBackdrop()
+              "
+            >
+              <canvas
+                #canvas
+                class="block w-full touch-none select-none"
+                [class]="isBrush() ? 'cursor-crosshair' : 'cursor-copy'"
+                (pointerdown)="onPointerDown($event)"
+                (pointermove)="onPointerMove($event)"
+                (pointerup)="onPointerUp($event)"
+                (pointercancel)="onPointerUp($event)"
+                role="img"
+                [attr.aria-label]="
+                  'Preview of ' + current.fileName + ' with the background removed'
+                "
+              ></canvas>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="mt-4 flex flex-wrap items-center gap-2">
+              <div class="flex items-center gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+                <button
+                  type="button"
+                  (click)="tool.set('pick')"
+                  [attr.aria-pressed]="tool() === 'pick'"
+                  [class]="
+                    tool() === 'pick'
+                      ? 'inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-xs font-bold text-white'
+                      : 'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-white dark:text-slate-300 dark:hover:bg-slate-950'
+                  "
+                >
+                  <app-icon name="palette" [size]="15" />
+                  Pick colour
+                </button>
+                <button
+                  type="button"
+                  (click)="tool.set('erase')"
+                  [attr.aria-pressed]="tool() === 'erase'"
+                  [class]="
+                    tool() === 'erase'
+                      ? 'inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-2 text-xs font-bold text-white'
+                      : 'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-white dark:text-slate-300 dark:hover:bg-slate-950'
+                  "
+                >
+                  <app-icon name="eraser" [size]="15" />
+                  Erase
+                </button>
+                <button
+                  type="button"
+                  (click)="tool.set('restore')"
+                  [attr.aria-pressed]="tool() === 'restore'"
+                  [class]="
+                    tool() === 'restore'
+                      ? 'inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white'
+                      : 'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-white dark:text-slate-300 dark:hover:bg-slate-950'
+                  "
+                >
+                  <app-icon name="brush" [size]="15" />
+                  Restore
+                </button>
+              </div>
+
+              @if (isBrush()) {
+                <label class="flex items-center gap-2 text-xs font-semibold">
+                  <span class="text-slate-500 dark:text-slate-400">Brush</span>
+                  <input
+                    type="range"
+                    min="6"
+                    max="120"
+                    step="2"
+                    class="h-2 w-28 cursor-pointer appearance-none rounded-full bg-slate-200 accent-brand-600 dark:bg-slate-700"
+                    [value]="brushSize()"
+                    (input)="brushSize.set(+$any($event.target).value)"
+                    aria-label="Brush size"
+                  />
+                  <span class="w-8 font-mono tabular-nums">{{ brushSize() }}</span>
+                </label>
+              }
+
+              <div class="ml-auto flex items-center gap-1">
+                <button
+                  type="button"
+                  (click)="undo()"
+                  [disabled]="!canUndo()"
+                  class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-2 text-xs font-semibold transition-colors hover:border-brand-300 disabled:opacity-40 dark:border-slate-700"
+                  aria-label="Undo the last brush stroke"
+                >
+                  <app-icon name="undo" [size]="14" />
+                </button>
+                <button
+                  type="button"
+                  (click)="redo()"
+                  [disabled]="!canRedo()"
+                  class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-2 text-xs font-semibold transition-colors hover:border-brand-300 disabled:opacity-40 dark:border-slate-700"
+                  aria-label="Redo the last undone stroke"
+                >
+                  <app-icon name="redo" [size]="14" />
+                </button>
+              </div>
+            </div>
+
+            <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">
+              @if (tool() === 'pick') {
+                Click a background area to key that exact colour, or leave it to the automatic edge
+                detection.
+              } @else if (tool() === 'erase') {
+                Paint over anything that should have been removed.
+              } @else {
+                Paint over anything that was removed by mistake.
+              }
+            </p>
+
+            @if (result(); as output) {
+              <div
+                class="mt-5 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-5 dark:border-slate-800"
+              >
+                <app-download-button
+                  [blob]="output.blob"
+                  [fileName]="output.fileName"
+                  size="lg"
+                  label="Download cut-out"
+                />
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                  {{ output.fileName }} · {{ output.width }} × {{ output.height }} px ·
+                  {{ output.size | fileSize }}
+                </p>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Options -->
+        <aside class="order-1 lg:order-2">
+          <app-options-panel heading="Cut-out settings">
+            @if (keyColorHex(); as hex) {
+              <div
+                class="flex items-center gap-3 rounded-xl border border-slate-200 p-3 dark:border-slate-700"
+              >
+                <span
+                  class="size-9 shrink-0 rounded-lg border border-slate-200 dark:border-slate-600"
+                  [style.backgroundColor]="hex"
+                ></span>
+                <span class="min-w-0 flex-1">
+                  <span class="block text-xs font-semibold">Keying this colour</span>
+                  <span class="font-mono text-xs text-slate-500 uppercase dark:text-slate-400">
+                    {{ hex }}
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  (click)="keyColor.set(null); refresh()"
+                  class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+                  aria-label="Go back to automatic detection"
+                >
+                  <app-icon name="close" [size]="15" />
+                </button>
+              </div>
+            }
+
+            <div>
+              <div class="flex items-baseline justify-between">
+                <label for="bg-tolerance" class="text-sm font-semibold">Tolerance</label>
+                <span
+                  class="rounded-lg bg-brand-50 px-2 py-0.5 font-mono text-xs font-semibold text-brand-700 tabular-nums dark:bg-brand-500/15 dark:text-brand-300"
+                >
+                  {{ tolerance() }}
+                </span>
+              </div>
+              <input
+                id="bg-tolerance"
+                type="range"
+                min="1"
+                max="100"
+                step="1"
+                class="mt-2 h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-brand-600 dark:bg-slate-700"
+                [value]="tolerance()"
+                (input)="tolerance.set(+$any($event.target).value)"
+                (change)="refresh()"
+              />
+              <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                Raise it if background is left behind, lower it if the subject is being eaten.
+              </p>
+            </div>
+
+            <app-segmented-control
+              [(value)]="mode"
+              [options]="modeOptions"
+              label="What to remove"
+              groupName="bg-mode"
+              (valueChange)="refresh()"
+            />
+
+            <div>
+              <div class="flex items-baseline justify-between">
+                <label for="bg-edge" class="text-sm font-semibold">Edge softness</label>
+                <span class="font-mono text-xs tabular-nums text-slate-500">
+                  {{ edgeSoftness() }} px
+                </span>
+              </div>
+              <input
+                id="bg-edge"
+                type="range"
+                min="0"
+                max="12"
+                step="1"
+                class="mt-2 h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-brand-600 dark:bg-slate-700"
+                [value]="edgeSoftness()"
+                (input)="edgeSoftness.set(+$any($event.target).value)"
+                (change)="refresh()"
+              />
+            </div>
+
+            <div>
+              <div class="flex items-baseline justify-between">
+                <label for="bg-shrink" class="text-sm font-semibold">Matte size</label>
+                <span class="font-mono text-xs tabular-nums text-slate-500">
+                  {{ shrink() > 0 ? '−' : shrink() < 0 ? '+' : '' }}{{ absShrink() }}
+                </span>
+              </div>
+              <input
+                id="bg-shrink"
+                type="range"
+                min="-60"
+                max="60"
+                step="2"
+                class="mt-2 h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-brand-600 dark:bg-slate-700"
+                [value]="shrink()"
+                (input)="shrink.set(+$any($event.target).value)"
+                (change)="refresh()"
+              />
+              <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                Pull the edge inwards to hide a halo, or outwards to keep more of the subject.
+              </p>
+            </div>
+
+            <div>
+              <div class="flex items-baseline justify-between">
+                <label for="bg-despill" class="text-sm font-semibold">De-spill</label>
+                <span class="font-mono text-xs tabular-nums text-slate-500">{{ despill() }}%</span>
+              </div>
+              <input
+                id="bg-despill"
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                class="mt-2 h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-brand-600 dark:bg-slate-700"
+                [value]="despill()"
+                (input)="despill.set(+$any($event.target).value)"
+                (change)="refresh()"
+              />
+              <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                Removes the old background's colour from semi-transparent edges.
+              </p>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <button
+                type="button"
+                (click)="resetSettings()"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold transition-colors hover:border-brand-300 dark:border-slate-700"
+              >
+                <app-icon name="refresh" [size]="14" />
+                Reset sliders
+              </button>
+              @if (canUndo()) {
+                <button
+                  type="button"
+                  (click)="clearBrushwork()"
+                  class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold transition-colors hover:border-rose-300 hover:text-rose-600 dark:border-slate-700"
+                >
+                  <app-icon name="trash" [size]="14" />
+                  Clear brushwork
+                </button>
+              }
+            </div>
+
+            <!-- Output -->
+            <div class="space-y-5 border-t border-slate-100 pt-5 dark:border-slate-800">
+              <div>
+                <p class="mb-2 text-sm font-semibold">Backdrop</p>
+                <div class="grid grid-cols-4 gap-2">
+                  @for (option of backdrops; track option.value) {
+                    <button
+                      type="button"
+                      (click)="backdrop.set(option.value); refresh()"
+                      [attr.aria-pressed]="backdrop() === option.value"
+                      [class]="
+                        backdrop() === option.value
+                          ? 'rounded-xl border border-brand-300 bg-brand-50 px-2 py-2 text-[11px] font-bold text-brand-700 dark:border-brand-500/40 dark:bg-brand-500/10 dark:text-brand-300'
+                          : 'rounded-xl border border-slate-200 px-2 py-2 text-[11px] font-semibold text-slate-600 transition-colors hover:border-brand-300 dark:border-slate-700 dark:text-slate-300'
+                      "
+                    >
+                      {{ option.label }}
+                    </button>
+                  }
+                </div>
+
+                @if (backdrop() === 'custom') {
+                  <div class="mt-3 flex items-center gap-3">
+                    <input
+                      type="color"
+                      class="size-10 cursor-pointer rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-950"
+                      [value]="customBackdrop()"
+                      (input)="customBackdrop.set($any($event.target).value); refresh()"
+                      aria-label="Custom backdrop colour"
+                    />
+                    <span class="font-mono text-sm text-slate-600 dark:text-slate-400">
+                      {{ customBackdrop() }}
+                    </span>
+                  </div>
+                }
+              </div>
+
+              <app-segmented-control
+                [(value)]="format"
+                [options]="formatOptions()"
+                label="Output format"
+                groupName="bg-format"
+              />
+
+              @if (effectiveBackdrop() === 'transparent' && format() === 'image/jpeg') {
+                <app-alert tone="warning" title="JPEG cannot store transparency">
+                  Choose PNG or WebP for a transparent cut-out, or pick a backdrop colour.
+                </app-alert>
+              }
+
+              @if (session.errorMessage(); as message) {
+                <app-alert tone="error" title="Export failed">{{ message }}</app-alert>
+              }
+
+              <app-tool-action-button
+                [label]="
+                  effectiveBackdrop() === 'transparent'
+                    ? 'Export transparent image'
+                    : 'Export with backdrop'
+                "
+                busyLabel="Rendering at full size…"
+                icon="eraser"
+                [busy]="isProcessing()"
+                [disabled]="!ready()"
+                (activated)="exportImage()"
+              />
+            </div>
+          </app-options-panel>
+        </aside>
+      </div>
+    }
+  } @else {
+    <app-file-uploader
+      heading="Drag & drop an image to cut out"
+      [multiple]="false"
+      [rejected]="session.rejected()"
+      (filesSelected)="addFiles($event)"
+    />
+  }
+</app-tool-page>
